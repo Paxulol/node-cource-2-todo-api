@@ -11,7 +11,7 @@ const {User} = require('./models/User');
 const {authenticate} = require('./middleware/authenticate');
 
 const app = express();
-const port = process.env.PORT;
+const port = process.env.PORT || 5000;
 
 app.use(bodyParser.json());
 
@@ -104,24 +104,27 @@ app.post('/users', (req, res) => {
   user.save().then(() => {
     return user.generateAuthToken();
   }).then((token) => {
-    res.header('x-auth', token).send(user);
+    res.header('x-auth', token).status(200).send(user);
   }).catch((err) => {
     res.status(400).send(err);
   });
 });
 
 
-app.get('/users/me', authenticate, (req,res) => {
-  const token = req.header('x-auth');
+app.get('/users/me', authenticate, (req, res) => {
+  res.send(req.user);
+});
 
-  User.findByToken(token).then((user) => {
-    if (!user){
-      return Promise.reject();
-    }
-    res.send(user);
-  }).catch((e) => {
-      res.status(401).send();
-  });
+app.post('/users/login', (req, res) => {
+    const body = _.pick(req.body, ['email', 'password']);
+
+    User.findByCredentials(body.email, body.password).then((user) => {
+        user.generateAuthToken().then((token) => {
+          res.header('x-auth', token).status(200).send(user);
+        })
+    }).catch((err) => {
+        res.status(400).send();
+    });
 });
 
 app.listen(port, () => {

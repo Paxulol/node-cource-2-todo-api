@@ -6,7 +6,7 @@ let password = '123abc!';
 
 bcrypt.genSalt(10, (err, salt) => {
     bcrypt.hash(password, salt, (err, hash) => {
-        console.log(hash);
+//        console.log(hash);
     })
 });
 
